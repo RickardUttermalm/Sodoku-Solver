@@ -1,0 +1,110 @@
+﻿@page "/"
+
+<h3>SodokuSolver
+@if (Loading)
+{
+    <span class="spinner-border"></span>
+}
+</h3>
+
+@for (int i = 0; i < 9; i++)
+{
+    for (int j = 0; j < 9; j++)
+    {
+        var li = i;
+        var lj = j;
+
+        if ((li == 3 || li == 6) && (lj == 2 || lj == 5))
+        {
+
+            <input @bind="Board[li,lj]"
+                   class="boardcell" style="border-top:2px solid black; border-right: 2px solid black" />
+        }
+        else if (li == 3 || li == 6)
+        {
+            <input @bind="Board[li,lj]"
+                   class="boardcell" style="border-top:2px solid black" />
+        }
+        else if (lj == 2 || lj == 5)
+        {
+            <input @bind="Board[li,lj]"
+                   class="boardcell" style="border-right:2px solid black" />
+        }
+        else
+        {
+            <input @bind="Board[li,lj]" class="boardcell" />
+        }
+    }
+    <br />
+}
+
+<br />
+<button @onclick="Reset" class="btn-info">Reset</button>
+<button @onclick="FindSolution" class="btn-primary">Solve</button>
+<br />
+<p>@ErrorMessage</p>
+<br />
+<label>Input Sodoku as string</label>
+<br />
+<input type="text" @bind="@BoardAsString" />
+<br />
+<button @onclick="LoadString" class="btn-light">Load</button>
+
+
+@code {
+    int[,] Board { get; set; } = new int[9, 9];
+    string BoardAsString { get; set; }
+    SodokuSolver Sodoku { get; set; }
+    string ErrorMessage { get; set; }
+    bool Loading { get; set; }
+    //easy: 003020600900305001001806400008102900700000008006708200002609500800203009005010300
+    //medium: 037060000205000800006908000000600024001503600650009000000302700009000402000050360
+    //superhard: 000000000000003085001020000000507000004000100090000000500000073002010000000040009
+
+    protected override void OnInitialized()
+    {
+        Sodoku = new SodokuSolver();
+        base.OnInitialized();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        ErrorMessage = "";
+    }
+
+    private void FindSolution()
+    {
+        ToggleLoading();
+        if (Sodoku.IsValidPuzzle(Board))
+        {
+            if (Sodoku.Solve(Board))
+            {
+                Board = Sodoku.Board;
+            }
+            else
+            {
+                ErrorMessage = "Could not find a solution :(";
+            }
+        }
+        else
+        {
+            ErrorMessage = "Thats not a valid puzzle.";
+        }
+        ToggleLoading();
+    }
+
+    void ToggleLoading()
+    {
+        Loading = !Loading;
+    }
+
+    void LoadString()
+    {
+        Board = Sodoku.GetBoardFromString(BoardAsString);
+    }
+
+    private void Reset()
+    {
+        Board = new int[9, 9];
+    }
+}
